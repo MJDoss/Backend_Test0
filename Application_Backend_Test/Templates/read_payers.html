@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{% block title %} Backend Test DB Display {% endblock %}</h1>
+    <div>
+        {% for p in payers_table %}
+            <h2>{{ p['payer'] }}
+            <span class="badge badge-pill badge-secondary">{{ p['points'] }}</span>
+            <span class="badge badge-pill badge-secondary">{{ p['timestamp_'] }}</span>
+            </h2>
+        <hr>
+    {% endfor %}
+    </div>
+{% endblock %}
