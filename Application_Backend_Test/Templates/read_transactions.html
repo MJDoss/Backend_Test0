@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{% block title %} Read transactions Backend Test DB Display {% endblock %}</h1>
+    <div>
+        {% for t in transaction_table %}
+            <h2>
+            {{ t['payer'] }}
+            <span class="badge badge-pill badge-secondary">{{ t['points'] }}</span>
+            <span class="badge badge-pill badge-secondary">{{ t['timestamp_'] }}</span>
+            </h2>
+        <hr>
+    {% endfor %}
+    </div>
+{% endblock %}

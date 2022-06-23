@@ -11,103 +11,86 @@ app.config['SECRET_KEY'] = 'Its a secret to everyone.'
 def index():
     return render_template('index.html')
 
-@app.route('/create_payer', methods = ['GET', 'POST'])
-def create_payer():
-    payers_table = CRUD.read_payer_list()
-    error = None
+@app.route('/create_transaction', methods = ['GET', 'POST'])
+def create_transaction():
     if (request.method == 'POST'):
-        payer_name = request.form['payer']
-        starting_points = int(request.form['points'])
-        if not payer_name: 
-            flash('Payer name is required')
-        elif not starting_points:
-            flash('Starting points is required')
-        elif (not isinstance(starting_points, int)):
-            flash('Starting points is an integer')
-        elif (isinstance(starting_points, int)) and (starting_points < 0):
-            flash('Starting points is a positive only integer') 
-        elif payer_name in payers_table:
-            flash('Invalid Credentials : payer name, already in use.')    
-        else:
-            CRUD.create_new_payer(payer_name, starting_points)
-            flash('new Payer added to DB')
-            return redirect(url_for('read_payers'))
-    return render_template('create_payer.html', payers_table=payers_table, error=error)
+        _payer = request.form['payer']
+        _points = int(request.form['points'])
 
+        # if the points are negative we need to see if that payer has enough
+        _payer_check = CRUD.read_payer_points(_payer)
+
+        if not _payer: 
+            flash('Payer name is required')
+        elif not _points:
+            flash('Starting points is required')
+        elif (not isinstance(_points, int)):
+            flash('Starting points is an integer') 
+        elif(_payer_check['sum_of_points'] is None and _points > 0):
+            CRUD.create_new_transaction(_payer, _points)
+            flash('New transaction added to DB')
+            return redirect(url_for('read_transactions'))
+        elif (_payer_check['sum_of_points'] + _points < 0):
+            flash('Payer lacks enough points')
+        else:
+            CRUD.create_new_transaction(_payer, _points)
+            flash('New transaction added to DB')
+            return redirect(url_for('read_transactions'))
+    return render_template('create_transaction.html')
+
+
+@app.route('/spend_points', methods = ['GET','POST'])
+def spend_points():
+    transaction_table = CRUD.read_all_transactions_ordered_by_timestamp()
+    total_points = CRUD.read_total_points()
+    if (request.method == 'POST'):
+        _points = int(request.form['points'])
+        # first check if there's enough points.
+        if (_points > total_points['total_points']):
+            flash('More points than available')
+        elif (_points < 0):
+            flash('Spending points must be a positive integer')
+        else:
+        # Build a dict with the payer as key and value as how many points the transaction is gonna be,
+        # by going through the previous transactions list from most recent to oldest using the id column.
+            _transactions = {}
+            _highest_id = CRUD.read_highest_id()
+            _id = _highest_id['recent_transaction']
+            while (_points > 0):
+                _cur_transaction = CRUD.read_transaction_from_id(_id)
+                _cur_payer = _cur_transaction['payer']
+                _cur_points = int(_cur_transaction['points'])
+                if(_cur_points < _points):
+                    if( _transactions.get(_cur_payer) is None):
+                        _transactions.update({ _cur_payer : -_cur_points })
+                    else :
+                        _transactions.update({ _cur_payer : _transactions.get(_cur_payer) - _cur_points })
+                    _points -= _cur_points
+                else:
+                    if( _transactions.get(_cur_payer) is None):
+                        _transactions.update({ _cur_payer : -_points })
+                    else :
+                        _transactions.update({ _cur_payer : _transactions.get(_cur_payer) - _points })
+                    _points -= _points
+                _id-=1
+            # Then re-use the create_transaction(payer,points) in a for loop with the transactions dict to pay it off
+            for _t in _transactions.keys():
+                _cur_payer = _t
+                _cur_points = _transactions.get(_t)
+                CRUD.create_new_transaction(_cur_payer, _cur_points)
+            flash('New transactions added to DB')
+            return redirect(url_for('read_transactions'))   
+    return render_template('spend_points.html', transaction_table=transaction_table, total_points=total_points)
+
+@app.route('/read_transactions', methods = ['GET'])
+def read_transactions():
+    transaction_table = CRUD.read_all_transactions_ordered_by_timestamp()
+    return render_template('read_transactions.html', transaction_table=transaction_table)
 
 @app.route('/read_payers', methods = ['GET'])
 def read_payers():
-    payers_table = CRUD.read_all()
-    return render_template('read_payers.html', payers_table=payers_table)
-
-@app.route('/add_points_to_a_payer', methods = ['GET', 'POST'])
-def add_points_to_a_payer():
-    payers_table = CRUD.read_all()
-    _payers = CRUD.read_payer_list()
-    error = None
-    if (request.method == 'POST'):
-        payer_name = request.form['payer']
-        adding_points = int(request.form['points'])
-        if not payer_name: 
-            flash('Payer name is required')
-        elif not adding_points:
-            flash('Adding points is required')
-        elif (adding_points < 0):
-            flash('Adding points is a positive only integer')  
-        elif (payer_name not in _payers):
-            flash('Invalid Credentials : Payer name not found.')
-        else:
-            CRUD.update_add_points_to_payer(payer_name, adding_points)
-            flash('Points added to payer!')
-            return redirect(url_for('read_payers'))
-    return render_template('add_points_to_a_payer.html', payers_table=payers_table, error=error)
-
-@app.route('/remove_points_from_a_payer', methods = ['GET', 'POST'])
-def remove_points_from_a_payer():
-    payers_table = CRUD.read_all()
-    _payers = CRUD.read_payer_list()
-    error = None
-    if (request.method == 'POST'):
-        payer_name = request.form['payer']
-        removing_points = int(request.form['points'])
-        payer_data = CRUD.read_payer(payer_name)
-        payer_points = payer_data['points']
-        if not payer_name: 
-            flash('Payer name is required')
-        elif not removing_points:
-            flash('spendinging points is required')
-        elif (removing_points < 0):
-            flash('Spending points is a positive only integer')  
-        elif (payer_name not in _payers):
-            flash('Invalid Credentials : Payer name not found.')
-        elif (removing_points > payer_points):
-            flash('Invalid Credentials : More points than payer has.')
-        else:
-            CRUD.update_remove_points_from_payer(payer_name, removing_points)
-            flash('Payer spent points!')
-            return redirect(url_for('read_payers'))
-    return render_template('remove_points_from_a_payer.html', payers_table=payers_table, error=error)
-
-
-@app.route('/remove_points_from_multiple_payers', methods = ['GET', 'POST'])
-def remove_points_from_multiple_payers():
-    payers_table = CRUD.read_all_ordered_by_timestamp()
-    total_points = CRUD.read_total_points_of_payers()
-    _total_points = total_points['total_points']
-    error = None
-    if (request.method == 'POST'):
-        removing_points = int(request.form['points'])
-        if not removing_points:
-            flash('removing points is required')
-        elif (removing_points < 0):
-            flash('Spending points is a positive only integer')  
-        elif (removing_points > _total_points):
-            flash('Invalid Credentials : More points than total points of all payers.')
-        else:
-            CRUD.update_remove_points_from_payers_based_on_timestamps(removing_points)
-            flash('The Payers their spent points!')
-            return redirect(url_for('read_payers'))
-    return render_template('remove_points_from_multiple_payers.html', payers_table=payers_table, error=error, total_points=total_points)
+    payer_table = CRUD.read_payers()
+    return render_template('read_payers.html', payer_table=payer_table)
 
 
 if __name__ == '__main__':

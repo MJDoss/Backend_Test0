@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>{% block title %} Backend Test : Spend Pts from all Payers based on Timestamps {% endblock %}</h1>
+    <h1>{% block title %} Backend Test : Spend Pts {% endblock %}</h1>
     <form method="POST">
         <div class="form-group">
             <label for="points">Points</label>
@@ -15,16 +15,17 @@
         </div>
     </form>  
 
+
     <div>
-        <h2>
-            Total points of all payers :  
-            <span class="badge badge-pill badge-secondary">{{ total_points['total_points'] }}</span>
-        </h2>
+        <h1> Total Points :  {{ total_points['total_points']  }} </h1>
         <hr>
-        {% for p in payers_table %}
-            <h2>{{ p['payer'] }}
-            <span class="badge badge-pill badge-secondary">{{ p['points'] }}</span>
-            <span class="badge badge-pill badge-secondary">{{ p['timestamp_'] }}</span>
+    </div>
+    <h1> Past transactions </h1>
+    <div>
+        {% for t in transaction_table %}
+            <h2>{{ t['payer'] }}
+            <span class="badge badge-pill badge-secondary">{{ t['points'] }}</span>
+            <span class="badge badge-pill badge-secondary">{{ t['timestamp_'] }}</span>
             </h2>
         <hr>
     {% endfor %}

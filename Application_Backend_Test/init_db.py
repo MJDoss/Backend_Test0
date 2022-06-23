@@ -8,9 +8,10 @@ with open('schema.sql') as f:
 
 cur = connection.cursor()
 
-cur.execute("INSERT INTO userData (payer, points) VALUES (?, ?)",
-            ('TestPayer', 100)
+cur.execute("INSERT INTO transactions (payer, points) VALUES (?, ?)",
+            ('TestPayer0', 100)
             )
+
 
 connection.commit()
 connection.close()

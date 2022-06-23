@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>{% block title %} Backend Test : Spend Pts from a Payer {% endblock %}</h1>
+    <h1>{% block title %} Create new Transaction for Backend Test {% endblock %}</h1>
     <form method="POST">
         <div class="form-group">
             <label for="payer">Payer</label>
@@ -20,13 +20,4 @@
             <button type="submit" class="btn btn-primary">Submit</button>
         </div>
     </form>  
-
-    <div>
-        {% for p in payers_table %}
-            <h2>{{ p['payer'] }}
-            <span class="badge badge-pill badge-secondary">{{ p['points'] }}</span>
-            </h2>
-        <hr>
-    {% endfor %}
-    </div>
 {% endblock %}

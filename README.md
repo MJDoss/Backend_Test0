@@ -1,16 +1,21 @@
 # Title : Backend_Test0
-# Author : Matthew Doss
-# Languages : Python, SQL
-# Tools used : Flask, SQLite3
+ Author : Matthew Doss
+ Languages : Python, SQL
+ Tools used : Flask, SQLite3
 
-Notes : /*
-*I wrote this on a Windows machine.
-*The version of Python I used for this is 3.8.7
-*I also used Flask version 1.1.2, but the new version 2.1.x should run it fine.
-*If not look for the older version.
-*/
+Notes :
+
+    I wrote and tested this on a Windows machine.
+
+    The version of Python I used for this is 3.8.7
+
+    I also used Flask version 1.1.2, but the new version 2.1.x should run it fine.
+
+    If not look for the older version.
+
 
 Instructions :
+
     Step 0 : Installations
         To run this app you will need to have the following projects installed : 
         Flask and PySQLite
